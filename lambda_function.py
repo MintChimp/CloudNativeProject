@@ -9,7 +9,7 @@ def process_nutritional_data_from_azurite():
     connect_str = (
         "DefaultEndpointsProtocol=http;"
         "AccountName=devstoreaccount1;"
-        "AccountKey=Eby8vdM02xNOcqFeqCnrC4xF6iCImP2U19x86766X676Gdxadvn6EDbhededed=="
+        "AccountKey=Eby8vdM02xN0cqFlqUwJPLlmEtlCDXJ10UZFT50uSRZ6IFsuFq2UVErCz416tq/K1SZFPT0tr/KBHBeksoGMGw=="
         ";BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;"
     )
     
