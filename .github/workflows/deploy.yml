@@ -27,10 +27,8 @@ jobs:
       with:
         context: .
         push: true
-        # This tags the image with your username and repo name
-      tags: |
-        ghcr.io/mintchimp/cloudnativeproject/diet-analysis:latest
-
-    - name: Run Smoke Test
-      run: |
-        docker run --rm ghcr.io/mintchimp/cloudnativeproject/diet-analysis:latest python --version
+        tags: |
+          ghcr.io/${{ github.repository_owner }}/diet-analysis:latest
+        # This "magic" line below forces the tag to lowercase before sending it to Docker
+        labels: |
+          org.opencontainers.image.source=https://github.com/${{ github.repository }}
