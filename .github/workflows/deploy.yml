@@ -28,9 +28,9 @@ jobs:
         context: .
         push: true
         # This tags the image with your username and repo name
-        tags: |
-          ghcr.io/${{ github.repository }}/diet-analysis:latest
+      tags: |
+        ghcr.io/mintchimp/cloudnativeproject/diet-analysis:latest
 
     - name: Run Smoke Test
       run: |
-        docker run --rm ghcr.io/${{ github.repository }}/diet-analysis:latest python --version
+        docker run --rm ghcr.io/mintchimp/cloudnativeproject/diet-analysis:latest python --version
