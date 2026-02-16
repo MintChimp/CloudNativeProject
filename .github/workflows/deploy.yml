@@ -1,0 +1,26 @@
+name: CI/CD Diet Analysis Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and Run Docker Container
+      run: |
+        # This builds the image using the Dockerfile
+        docker build -t diet-analysis-image .
+        
+        # This runs a "smoke test" inside the container to ensure python starts
+        docker run --rm diet-analysis-image python --version
