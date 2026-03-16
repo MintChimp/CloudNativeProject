@@ -20,12 +20,16 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: Zip artifact for deployment
+      # The dot at the end is crucial—it zips the contents, not the folder itself
+      run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
+
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
         name: python-app
-        path: .  # Upload the whole directory (Azure will build it)
-
+        path: release.zip
+        
   deploy:
     runs-on: ubuntu-latest
     needs: build
@@ -34,15 +38,15 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: python-app
-        path: .
+
+    # Zip files should be extracted so host.json is in the current working directory
+    - name: Unzip artifact
+      run: unzip release.zip
 
     - name: 'Deploy to Azure Functions'
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
-        # Add these specifically for Flex Consumption:
         sku: 'flexconsumption'
         remote-build: true
-        scm-do-build-during-deployment: true
-        enable-oryx-build: true
