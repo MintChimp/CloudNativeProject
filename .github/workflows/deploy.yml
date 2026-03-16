@@ -15,30 +15,16 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
+    - name: Set up Python ${{ env.AZURE_FUNCTIONAPP_NAME }}
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    # Optional: Keep your Docker test here if you want to be extra safe
-    - name: Build Docker 'Smoke Test'
-      run: |
-        docker build -t diet-analysis-test .
-        docker run --rm diet-analysis-test python --version
-
-    - name: Zip artifact for deployment
-      run: zip -r release.zip .
 
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
         name: python-app
-        path: release.zip
+        path: .  # Upload the whole directory (Azure will build it)
 
   deploy:
     runs-on: ubuntu-latest
@@ -48,14 +34,12 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: python-app
-
-    - name: Unzip artifact for deployment
-      run: unzip release.zip
+        path: .
 
     - name: 'Deploy to Azure Functions'
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-        scm-type: 'None' # Flex Consumption specific
-        remote-build: true
+        package: '.'
+        remote-build: true # This tells Azure to run 'pip install' on the server
