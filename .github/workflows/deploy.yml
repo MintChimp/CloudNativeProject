@@ -40,6 +40,7 @@ jobs:
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+        # TRIPLE CHECK THIS SECRET NAME IN GITHUB SETTINGS
+        publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }} 
         package: '.'
-        remote-build: true # This tells Azure to run 'pip install' on the server
+        remote-build: true
