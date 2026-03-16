@@ -5,7 +5,7 @@ on:
     branches: [ main ]
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'your-function-app-name' # <-- Change this to your actual app name
+  AZURE_FUNCTIONAPP_NAME: 'func-dietanalysis-lp-dev'
   PYTHON_VERSION: '3.10'
 
 jobs:
