@@ -21,9 +21,10 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Zip artifact for deployment
-      # The dot at the end is crucial—it zips the contents, not the folder itself
-      run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
-
+        # The ./* tells zip to take everything inside the current folder
+        # The -x flags exclude unnecessary git and virtual environment files
+        run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
+  
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
