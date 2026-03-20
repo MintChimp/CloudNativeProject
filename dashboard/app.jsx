@@ -27,19 +27,37 @@ function App() {
 
   const pieData = useMemo(() => {
     if (!chartData.labels.length) {
-      return { diet: "N/A", values: [0, 0, 0] };
+      return {
+        labels: ["N/A"],
+        values: [0],
+        datasetLabel: "Diet Share",
+        title: "Diet Share by Total Macros"
+      };
+    }
+
+    if (selectedDiet === "all") {
+      return {
+        labels: chartData.labels,
+        values: chartData.labels.map((_, index) => (
+          (chartData.protein[index] ?? 0) +
+          (chartData.carbs[index] ?? 0) +
+          (chartData.fat[index] ?? 0)
+        )),
+        datasetLabel: "Total Macros (g)",
+        title: "Diet Share by Total Macros"
+      };
     }
 
     const activeDiet = chartData.labels[0];
-    const index = chartData.labels.indexOf(activeDiet);
-
     return {
-      diet: activeDiet,
+      labels: ["Protein(g)", "Carbs(g)", "Fat(g)"],
       values: [
-        chartData.protein[index] ?? 0,
-        chartData.carbs[index] ?? 0,
-        chartData.fat[index] ?? 0
-      ]
+        chartData.protein[0] ?? 0,
+        chartData.carbs[0] ?? 0,
+        chartData.fat[0] ?? 0
+      ],
+      datasetLabel: `${activeDiet} Macro Split`,
+      title: `Diet Type: ${activeDiet}`
     };
   }, [chartData, selectedDiet]);
 
@@ -149,10 +167,10 @@ function App() {
     pieChartRef.current = new Chart(pieCanvasRef.current, {
       type: "pie",
       data: {
-        labels: ["Protein(g)", "Carbs(g)", "Fat(g)"],
+        labels: pieData.labels,
         datasets: [
           {
-            label: `${pieData.diet} Macro Split`,
+            label: pieData.datasetLabel,
             data: pieData.values
           }
         ]
@@ -163,7 +181,7 @@ function App() {
         plugins: {
           title: {
             display: true,
-            text: `Diet Type: ${pieData.diet}`
+            text: pieData.title
           }
         }
       }
@@ -225,7 +243,7 @@ function App() {
         </article>
 
         <article className="chart-card">
-          <h2>Macro Split for Selected Diet (Pie)</h2>
+          <h2>Diet Distribution / Selected Diet Split (Pie)</h2>
           <canvas ref={pieCanvasRef} aria-label="Pie chart"></canvas>
         </article>
       </section>
