@@ -1,0 +1,122 @@
+:root {
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6fb;
+  color: #1f2937;
+}
+
+.container {
+  width: min(1200px, 94%);
+  margin: 0 auto;
+  padding: 1.2rem 0 2rem;
+}
+
+.header h1 {
+  margin: 0 0 0.2rem;
+  font-size: 1.9rem;
+}
+
+.header p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.controls {
+  margin-top: 1.2rem;
+  display: grid;
+  grid-template-columns: 220px 140px;
+  gap: 0.7rem;
+  align-items: end;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.control-group {
+  width: 100%;
+}
+
+.controls label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+  font-size: 0.9rem;
+}
+
+.controls select,
+.controls button {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.62rem;
+  font-size: 0.95rem;
+}
+
+.controls button {
+  cursor: pointer;
+  background: #1d4ed8;
+  color: #fff;
+  font-weight: 700;
+  border: none;
+}
+
+.controls button:hover {
+  background: #1e40af;
+}
+
+.meta {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.7rem;
+}
+
+.meta-card,
+.chart-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.meta-card h2,
+.chart-card h2 {
+  margin: 0 0 0.55rem;
+  font-size: 1.05rem;
+}
+
+.meta-card p {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.charts {
+  margin-top: 0.9rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.chart-card canvas {
+  width: 100% !important;
+  max-height: 360px;
+}
+
+@media (max-width: 900px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .meta {
+    grid-template-columns: 1fr;
+  }
+}
