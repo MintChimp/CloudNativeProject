@@ -18,19 +18,19 @@ function App() {
   const diets = useMemo(() => Object.keys(insights), [insights]);
 
   const chartData = useMemo(() => {
-    const labels = diets;
+    const labels = selectedDiet === "all" ? diets : diets.filter((diet) => diet === selectedDiet);
     const protein = labels.map((diet) => Number(insights[diet]?.["Protein(g)"] ?? 0));
     const carbs = labels.map((diet) => Number(insights[diet]?.["Carbs(g)"] ?? 0));
     const fat = labels.map((diet) => Number(insights[diet]?.["Fat(g)"] ?? 0));
     return { labels, protein, carbs, fat };
-  }, [diets, insights]);
+  }, [diets, insights, selectedDiet]);
 
   const pieData = useMemo(() => {
     if (!chartData.labels.length) {
       return { diet: "N/A", values: [0, 0, 0] };
     }
 
-    const activeDiet = selectedDiet === "all" ? chartData.labels[0] : selectedDiet;
+    const activeDiet = chartData.labels[0];
     const index = chartData.labels.indexOf(activeDiet);
 
     return {
