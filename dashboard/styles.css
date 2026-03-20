@@ -102,8 +102,12 @@ body {
 .charts {
   margin-top: 0.9rem;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.9rem;
+}
+
+.charts .chart-card:first-child {
+  grid-column: 1 / -1;
 }
 
 .chart-card canvas {
@@ -118,5 +122,13 @@ body {
 
   .meta {
     grid-template-columns: 1fr;
+  }
+
+  .charts {
+    grid-template-columns: 1fr;
+  }
+
+  .charts .chart-card:first-child {
+    grid-column: auto;
   }
 }
