@@ -1,7 +1,7 @@
 const { useEffect, useMemo, useRef, useState } = React;
 
 function App() {
-  const apiUrl = window.DASHBOARD_CONFIG?.apiUrl || "/api/data_analysis";
+  const apiUrl = window.DASHBOARD_CONFIG?.apiUrl || "https://func-dietanalysis-lp-dev-g7f7g2b0e3gafghu.canadacentral-01.azurewebsites.net/api/data_analysis";
   const [insights, setInsights] = useState({});
   const [metadata, setMetadata] = useState({});
   const [selectedDiet, setSelectedDiet] = useState("all");
