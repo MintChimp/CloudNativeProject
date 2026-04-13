@@ -140,8 +140,12 @@ def search_recipes(req: func.HttpRequest) -> func.HttpResponse:
     page = int(req.params.get('page', 1))
 
     try:
-        # PERFORMANCE: Load the 'Clean' file, not the raw one
-        blob_client = blob_service_client.get_blob_client(container="datasets", blob="Clean_Diets.csv")
+        # ADD THESE TWO LINES: Re-initialize the client inside this function's scope
+        connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
+        # NOTE: Using All_Diets.csv until you build your Blob Trigger!
+        blob_client = blob_service_client.get_blob_client(container="datasets", blob="All_Diets.csv")
         data = blob_client.download_blob().readall()
         df = pd.read_csv(io.BytesIO(data))
 
