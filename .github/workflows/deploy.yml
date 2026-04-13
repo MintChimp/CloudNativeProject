@@ -23,16 +23,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Install directly into the package folder
-        pip install --target=".python_packages/lib/site-packages" -r requirements.txt
+        # We use this specific path so the Azure Function worker can find them
+        pip install --target="./.python_packages/lib/site-packages" -r requirements.txt
 
     - name: Zip artifact for deployment
       run: |
-        # This ensures we zip from INSIDE the directory, 
-        # so function_app.py is at the root of the zip.
-        cd . 
-        zip -r ../release.zip . -x "*.git*" "*.github*" "*.venv*"
-        mv ../release.zip .
+        # Zip everything including the hidden .python_packages folder
+        zip -r release.zip . -x "*.git*" "*.github*" "*.venv*"
         
     - name: Upload artifact for deployment job
       # FIXED: Changed azure/upload-artifact to actions/upload-artifact
