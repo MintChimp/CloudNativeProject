@@ -28,6 +28,9 @@ function App() {
   // 2FA placeholder
   const [twoFaCode, setTwoFaCode] = useState("");
 
+  // Error banner
+  const [errorMsg, setErrorMsg] = useState("");
+
   // --- REFS ---
   const barCanvasRef = useRef(null);
   const scatterCanvasRef = useRef(null);
@@ -37,10 +40,34 @@ function App() {
   const pieChartRef = useRef(null);
 
   // ============================
+  //  CHECK SWA /.auth/me ON LOAD
+  //  (handles GitHub OAuth redirect)
+  // ============================
+  useEffect(() => {
+    if (user) return; // already logged in locally
+    fetch("/.auth/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data && data.clientPrincipal) {
+          const cp = data.clientPrincipal;
+          const userData = {
+            name: cp.userDetails || cp.userId,
+            email: cp.userDetails || cp.userId,
+            auth_type: cp.identityProvider || "swa",
+          };
+          localStorage.setItem("user", JSON.stringify(userData));
+          setUser(userData);
+        }
+      })
+      .catch(() => {}); // not on SWA or no session — ignore
+  }, []);
+
+  // ============================
   //  AUTH
   // ============================
   const handleAuth = async () => {
     setIsLoading(true);
+    setErrorMsg("");
     try {
       const endpoint = authMode === "login" ? `${baseFuncUrl}/login` : `${baseFuncUrl}/register`;
       const response = await fetch(endpoint, {
@@ -48,7 +75,10 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name: email.split("@")[0] }),
       });
-      if (!response.ok) throw new Error(`${authMode} failed. Check credentials.`);
+      if (!response.ok) {
+        if (response.status === 404) throw new Error("API endpoint not found. The Azure Function may not be deployed yet.");
+        throw new Error(`${authMode} failed. Check credentials.`);
+      }
       const data = await response.json();
       if (authMode === "login") {
         const userData = data.user || data;
@@ -59,7 +89,7 @@ function App() {
         setAuthMode("login");
       }
     } catch (err) {
-      alert(err.message);
+      setErrorMsg(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -68,6 +98,8 @@ function App() {
   const logout = () => {
     localStorage.removeItem("user");
     setUser(null);
+    // Also clear SWA session if applicable
+    fetch("/.auth/logout").catch(() => {});
   };
 
   // ============================
@@ -319,6 +351,11 @@ function App() {
           { className: "primary", onClick: handleAuth, disabled: isLoading },
           isLoading ? "Please wait..." : authMode === "login" ? "Login" : "Register"
         ),
+        errorMsg && React.createElement(
+          "p",
+          { className: "text-red-600 text-sm text-center mt-2" },
+          errorMsg
+        ),
         React.createElement(
           "p",
           {
@@ -332,7 +369,7 @@ function App() {
           "button",
           {
             className: "github",
-            onClick: () => (window.location.href = "/.auth/login/github"),
+            onClick: () => (window.location.href = "/.auth/login/github?post_login_redirect_uri=/"),
           },
           "Login with GitHub"
         )
