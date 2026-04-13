@@ -654,19 +654,6 @@ function App() {
               },
             },
             "Login with GitHub"
-          ),
-          React.createElement(
-            "div",
-            { className: "mt-4" },
-            React.createElement("label", { htmlFor: "2fa-input", className: "block text-sm text-gray-600" }, "Enter 2FA Code"),
-            React.createElement("input", {
-              id: "2fa-input",
-              type: "text",
-              className: "p-2 border rounded w-full",
-              placeholder: "Enter your 2FA code",
-              value: twoFaCode,
-              onChange: (e) => setTwoFaCode(e.target.value),
-            })
           )
         )
       ),

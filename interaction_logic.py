@@ -1,5 +1,5 @@
 import pandas as pd
-import io
+import math # Make sure to import math
 
 def get_paginated_data(df, diet_type=None, keyword=None, page=1, page_size=10):
     """
@@ -20,9 +20,13 @@ def get_paginated_data(df, diet_type=None, keyword=None, page=1, page_size=10):
     
     paginated_df = df.iloc[start_index:end_index]
     
+    # Calculate total pages using ceiling division. 
+    # Fallback to 1 if there are 0 results so the UI doesn't break.
+    total_pages = math.ceil(total_results / page_size) if total_results > 0 else 1
+    
     return {
         "results": paginated_df.to_dict(orient='records'),
         "total_results": total_results,
         "page": page,
-        "total_pages": (total_results // page_size) + 1
+        "total_pages": total_pages
     }
