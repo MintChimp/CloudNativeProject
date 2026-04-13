@@ -148,36 +148,39 @@ def search_recipes(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
     
     
-@app.blob_trigger(arg_name="myblob", path="datasets/All_Diets.csv", connection="AZURE_STORAGE_CONNECTION_STRING")
+@app.blob_trigger(arg_name="myblob", path="datasets/{name}", connection="AZURE_STORAGE_CONNECTION_STRING")
 def process_dataset_on_upload(myblob: func.InputStream):
-    logging.info(f"Blob trigger fired for: {myblob.name}")
+    # 1. Ignore everything except All_Diets.csv
+    if "All_Diets.csv" not in myblob.name:
+        return
+        
+    logging.info(f"Blob trigger fired for target file: {myblob.name}")
     
     try:
-        # 1. Read the raw data triggered by the upload
+        # Read the raw data
         df = pd.read_csv(io.BytesIO(myblob.read()))
         
-        # 2. Clean the data (Fill NAs, etc.)
+        # Clean the data
         df.fillna(df.mean(numeric_only=True), inplace=True)
         
-        # 3. Calculate averages
+        # Calculate averages
         avg_macros = df.groupby('Diet_type')[['Protein(g)', 'Carbs(g)', 'Fat(g)']].mean().to_dict(orient='index')
         
-        # 4. Save the results to Cosmos DB Cache
+        # Save to Cosmos DB Cache
         container = get_container()
         cache_item = {
-            "id": "latest_averages", # Hardcoded ID so it always overwrites the cache
+            "id": "latest_averages", 
             "data": avg_macros,
-            "auth_type": "system_cache" # Satisfies any partition key constraints if needed
+            "auth_type": "system_cache" 
         }
         container.upsert_item(body=cache_item)
         logging.info("Successfully updated Cosmos DB cache.")
 
-        # 5. Save "Clean_Diets.csv" back to Blob Storage for the search API
+        # Save "Clean_Diets.csv" to Blob Storage
         connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
         blob_service_client = BlobServiceClient.from_connection_string(connection_string)
         clean_blob_client = blob_service_client.get_blob_client(container="datasets", blob="Clean_Diets.csv")
         
-        # Convert dataframe back to CSV and upload
         clean_csv_data = df.to_csv(index=False).encode('utf-8')
         clean_blob_client.upload_blob(clean_csv_data, overwrite=True)
         logging.info("Successfully generated Clean_Diets.csv.")
