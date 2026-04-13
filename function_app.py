@@ -4,6 +4,7 @@ import json
 import bcrypt
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.blob.storage import BlobServiceClient
+from interaction_logic import get_paginated_data
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -111,3 +112,28 @@ def diet_analysis_handler(req: func.HttpRequest) -> func.HttpResponse:
             mimetype="application/json",
             status_code=500
         )
+
+# --- DATA INTERACTION ENDPOINT ---
+@app.route(route="recipes/search", methods=["GET"])
+def search_recipes(req: func.HttpRequest) -> func.HttpResponse:
+    # Get parameters from URL (e.g., ?diet=Vegan&keyword=Tofu&page=1)
+    diet_type = req.params.get('diet')
+    keyword = req.params.get('keyword')
+    page = int(req.params.get('page', 1))
+
+    try:
+        # PERFORMANCE: Load the 'Clean' file, not the raw one
+        blob_client = blob_service_client.get_blob_client(container="datasets", blob="Clean_Diets.csv")
+        data = blob_client.download_blob().readall()
+        df = pd.read_csv(io.BytesIO(data))
+
+        # Use the interaction logic
+        result = get_paginated_data(df, diet_type, keyword, page)
+
+        return func.HttpResponse(
+            body=json.dumps(result),
+            mimetype="application/json",
+            status_code=200
+        )
+    except Exception as e:
+        return func.HttpResponse(f"Error: {str(e)}", status_code=500)
