@@ -149,7 +149,7 @@ def search_recipes(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
     
     
-@app.blob_trigger(arg_name="myblob", path="datasets/{name}", connection="AZURE_STORAGE_CONNECTION_STRING")
+@app.blob_trigger(arg_name="myblob", path="datasets/{name}", connection="AZURE_STORAGE_CONNECTION_STRING", source="EventGrid")
 def process_dataset_on_upload(myblob: func.InputStream):
     # 1. Ignore everything except All_Diets.csv
     if "All_Diets.csv" not in myblob.name:
