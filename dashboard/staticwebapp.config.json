@@ -1,20 +1,9 @@
 {
-  "auth": {
-    "identityProviders": {
-      "github": {
-        "registration": {
-          "clientIdSettingName": "GITHUB_CLIENT_ID",
-          "clientSecretSettingName": "GITHUB_CLIENT_SECRET"
-        }
-      }
-    }
-  },
   "navigationFallback": {
     "rewrite": "/index.html",
-    "exclude": ["/.auth/*", "/api/*", "*.css", "*.js", "*.png", "*.jpg", "*.svg", "*.ico"]
-  },
-  "platform": {
-    "apiLanguage": "python",
-    "apiVersion": "3.10"
+    "exclude": [
+      "/.auth/*",
+      "/api/*"
+    ]
   }
 }
