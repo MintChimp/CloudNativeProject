@@ -1,51 +1,56 @@
-name: Build and Deploy to Azure Functions
+name: Azure Static Web Apps CI/CD
 
 on:
   push:
-    branches: [ main ]
-
-env:
-  AZURE_FUNCTIONAPP_NAME: 'func-dietanalysis-lp-dev'
-  PYTHON_VERSION: '3.10'
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
 
 jobs:
-  build:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    env:
+      # Change this to the base API directory so React can use /login, /register, etc.
+      FRONTEND_API_URL: https://func-dietanalysis-lp-dev-g7f7g2b0e3gafghu.canadacentral-01.azurewebsites.net/api
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: false
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+      - name: Inject frontend API URL config
+        shell: bash
+        run: |
+          cat > dashboard/config.js <<EOF
+          window.DASHBOARD_CONFIG = {
+            apiUrl: "$FRONTEND_API_URL"
+          };
+          EOF
 
-    - name: Zip artifact for deployment
-      # This zips the contents of the current directory into release.zip
-      run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_RED_WAVE_00EAECE1E }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "dashboard" 
+          api_location: "" 
+          output_location: "" 
 
-    - name: Upload artifact for deployment job
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-app
-        path: release.zip
-
-  deploy:
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    needs: build
+    name: Close Pull Request Job
     steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v4
-      with:
-        name: python-app
-
-    - name: Unzip artifact
-      run: unzip release.zip
-
-    - name: 'Deploy to Azure Functions'
-      uses: Azure/functions-action@v1
-      with:
-        app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
-        publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
-        sku: 'flexconsumption'
-        remote-build: true
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_RED_WAVE_00EAECE1E }}
+          action: "close"
