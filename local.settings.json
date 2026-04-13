@@ -1,8 +1,0 @@
-{
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "python",
-    "COSMOS_CONNECTION_STRING": "AccountEndpoint=https://cloud-native-db.documents.azure.com:443/;AccountKey=bUP50ayFXlg9KW3mliublbQnNbwa1Lc9gtJBSNUDNiM8LGGKkHSm8GQZpYQFLwk1Z8nmeB5Oz4S4ACDbPxXiZQ==;"
-  }
-}
