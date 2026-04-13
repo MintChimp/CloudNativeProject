@@ -9,10 +9,10 @@ env:
   PYTHON_VERSION: '3.10'
 
 jobs:
-  # --- JOB 1: BUILD AND DEPLOY FUNCTIONS ---
-  build_and_deploy_functions:
-    runs-on: ubuntu-latest
-    steps:
+# --- JOB 1: BUILD AND DEPLOY FUNCTIONS ---
+build_and_deploy_functions:
+  runs-on: ubuntu-latest
+  steps:
     - name: Checkout Code
       uses: actions/checkout@v4
 
@@ -21,16 +21,21 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # This is MANDATORY for Flex Consumption deployments
+        pip install --target="./.python_packages/lib/site-packages" -r requirements.txt
+
     - name: 'Deploy to Azure Functions'
       uses: Azure/functions-action@v1
       with:
         app-name: ${{ env.AZURE_FUNCTIONAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_APP_SERVICE_PUBLISH_PROFILE }}
         sku: 'flexconsumption'
-        remote-build: true
-        # Path '.' ensures function_app.py is at the root of the deployment
+        remote-build: false  # Must be false for Flex Consumption
         package: .
-
+        
   # --- JOB 2: BUILD AND DEPLOY STATIC WEB APP ---
   build_and_deploy_swa:
     needs: build_and_deploy_functions
