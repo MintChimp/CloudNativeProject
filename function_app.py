@@ -9,6 +9,7 @@ import logging
 from azure.cosmos import CosmosClient, PartitionKey
 from azure.storage.blob import BlobServiceClient
 from interaction_logic import get_paginated_data
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 logging.info("Python Worker is attempting to load function_app.py")
 
@@ -91,9 +92,17 @@ def diet_analysis_handler(req: func.HttpRequest) -> func.HttpResponse:
     try:
         container = get_container()
         
-        # Instantly fetch the pre-calculated math from the Blob Trigger
-        cached_data = container.read_item(item="latest_averages", partition_key="latest_averages")
-        
+        # Try to fetch the pre-calculated math
+        try:
+            cached_data = container.read_item(item="latest_averages", partition_key="latest_averages")
+        except CosmosResourceNotFoundError:
+            # Safely handle the missing cache instead of crashing with a 500 error!
+            return func.HttpResponse(
+                body=json.dumps({"error": "Cache is empty. Please upload All_Diets.csv to Azure Blob Storage to trigger the background math."}),
+                mimetype="application/json",
+                status_code=404 # 404 Not Found is much better than 500 Server Error
+            )
+            
         execution_time = time.time() - start_time
         
         response_payload = {
@@ -105,18 +114,10 @@ def diet_analysis_handler(req: func.HttpRequest) -> func.HttpResponse:
             }
         }
 
-        return func.HttpResponse(
-            body=json.dumps(response_payload),
-            mimetype="application/json",
-            status_code=200
-        )
+        return func.HttpResponse(body=json.dumps(response_payload), mimetype="application/json", status_code=200)
 
     except Exception as e:
-        return func.HttpResponse(
-            body=json.dumps({"error": str(e)}),
-            mimetype="application/json",
-            status_code=500
-        )
+        return func.HttpResponse(body=json.dumps({"error": str(e)}), mimetype="application/json", status_code=500)
 
 # --- DATA INTERACTION ENDPOINT ---
 @app.route(route="recipes/search", methods=["GET"])
