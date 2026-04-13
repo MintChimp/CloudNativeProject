@@ -27,7 +27,7 @@ def get_container():
         COSMOS_CON_STR = os.environ["COSMOS_CONNECTION_STRING"] 
         cosmos_client = CosmosClient.from_connection_string(COSMOS_CON_STR)
         database = cosmos_client.get_database_client("UserDB")
-        user_container = database.get_container_client("Users")
+        user_container = database.get_container_client("User")
     return user_container
 
 # --- REGISTRATION ENDPOINT ---
