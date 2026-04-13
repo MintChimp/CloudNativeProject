@@ -14,16 +14,27 @@ logging.info("Python Worker is attempting to load function_app.py")
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
-# Cosmos DB Setup
-COSMOS_CON_STR = os.environ.get("COSMOS_CONNECTION_STRING")
-client = CosmosClient.from_connection_string(COSMOS_CON_STR)
-database = client.get_database_client("UserDB")
-container = database.get_container_client("Users")
+# --- function_app.py (Updated Global Section) ---
+# Set globals to None
+cosmos_client = None
+database = None
+user_container = None
+
+def get_container():
+    global cosmos_client, database, user_container
+    if user_container is None:
+        # Fails safely at runtime, not deployment time
+        COSMOS_CON_STR = os.environ["COSMOS_CONNECTION_STRING"] 
+        cosmos_client = CosmosClient.from_connection_string(COSMOS_CON_STR)
+        database = cosmos_client.get_database_client("UserDB")
+        user_container = database.get_container_client("Users")
+    return user_container
 
 # --- REGISTRATION ENDPOINT ---
 @app.route(route="register", methods=["POST"])
 def register_user(req: func.HttpRequest) -> func.HttpResponse:
     try:
+        container = get_container()
         req_body = req.get_json()
         email = req_body.get('email')
         password = req_body.get('password')
@@ -52,6 +63,7 @@ def register_user(req: func.HttpRequest) -> func.HttpResponse:
 @app.route(route="login", methods=["POST"])
 def login_user(req: func.HttpRequest) -> func.HttpResponse:
     try:
+        container = get_container()
         req_body = req.get_json()
         email = req_body.get('email')
         password = req_body.get('password')
