@@ -647,7 +647,11 @@ function App() {
             "button",
             {
               className: "bg-blue-600 text-white py-2 px-4 rounded mb-4",
-              onClick: () => (window.location.href = "/.auth/login/github"),
+              // Update your GitHub button onClick:
+              onClick: () => {
+                localStorage.removeItem("user"); // Clear any old local sessions
+                window.location.href = "/.auth/login/github?post_login_redirect_uri=/";
+              },
             },
             "Login with GitHub"
           ),
