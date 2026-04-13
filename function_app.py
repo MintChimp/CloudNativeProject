@@ -84,37 +84,24 @@ def login_user(req: func.HttpRequest) -> func.HttpResponse:
     except Exception:
         return func.HttpResponse("User not found or login failed", status_code=401)
     
-@app.route(route="data_analysis") # This replaces function.json
+@app.route(route="data_analysis")
 def diet_analysis_handler(req: func.HttpRequest) -> func.HttpResponse:
     start_time = time.time()
 
     try:
-        # Initialize using the cloud environment variable 
-        connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
-        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        container = get_container()
         
-        container_name = "datasets"
-        blob_name = "All_Diets.csv"
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
-
-        # Download and process the CSV
-        download_stream = blob_client.download_blob()
-        df = pd.read_csv(io.BytesIO(download_stream.readall()))
-
-        # Clean data
-        df.fillna(df.mean(numeric_only=True), inplace=True)
-
-        # Calculate averages
-        avg_macros = df.groupby('Diet_type')[['Protein(g)', 'Carbs(g)', 'Fat(g)']].mean().to_dict(orient='index')
-
+        # Instantly fetch the pre-calculated math from the Blob Trigger
+        cached_data = container.read_item(item="latest_averages", partition_key="latest_averages")
+        
         execution_time = time.time() - start_time
         
         response_payload = {
-            "insights": avg_macros,
+            "insights": cached_data.get("data", {}),
             "metadata": {
                 "execution_time": f"{execution_time:.4f}s",
                 "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
-                "status": "Cloud Deployment Successful"
+                "status": "Served from Cosmos DB Cache"
             }
         }
 
@@ -159,3 +146,41 @@ def search_recipes(req: func.HttpRequest) -> func.HttpResponse:
         )
     except Exception as e:
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
+    
+    
+@app.blob_trigger(arg_name="myblob", path="datasets/All_Diets.csv", connection="AZURE_STORAGE_CONNECTION_STRING")
+def process_dataset_on_upload(myblob: func.InputStream):
+    logging.info(f"Blob trigger fired for: {myblob.name}")
+    
+    try:
+        # 1. Read the raw data triggered by the upload
+        df = pd.read_csv(io.BytesIO(myblob.read()))
+        
+        # 2. Clean the data (Fill NAs, etc.)
+        df.fillna(df.mean(numeric_only=True), inplace=True)
+        
+        # 3. Calculate averages
+        avg_macros = df.groupby('Diet_type')[['Protein(g)', 'Carbs(g)', 'Fat(g)']].mean().to_dict(orient='index')
+        
+        # 4. Save the results to Cosmos DB Cache
+        container = get_container()
+        cache_item = {
+            "id": "latest_averages", # Hardcoded ID so it always overwrites the cache
+            "data": avg_macros,
+            "auth_type": "system_cache" # Satisfies any partition key constraints if needed
+        }
+        container.upsert_item(body=cache_item)
+        logging.info("Successfully updated Cosmos DB cache.")
+
+        # 5. Save "Clean_Diets.csv" back to Blob Storage for the search API
+        connection_string = os.environ["AZURE_STORAGE_CONNECTION_STRING"]
+        blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+        clean_blob_client = blob_service_client.get_blob_client(container="datasets", blob="Clean_Diets.csv")
+        
+        # Convert dataframe back to CSV and upload
+        clean_csv_data = df.to_csv(index=False).encode('utf-8')
+        clean_blob_client.upload_blob(clean_csv_data, overwrite=True)
+        logging.info("Successfully generated Clean_Diets.csv.")
+
+    except Exception as e:
+        logging.error(f"Error processing blob: {str(e)}")
