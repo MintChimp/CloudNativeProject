@@ -7,7 +7,7 @@ import pandas as pd
 import io
 import logging
 from azure.cosmos import CosmosClient, PartitionKey
-from azure.blob.storage import BlobServiceClient
+from azure.storage.blob import BlobServiceClient
 from interaction_logic import get_paginated_data
 
 logging.info("Python Worker is attempting to load function_app.py")
