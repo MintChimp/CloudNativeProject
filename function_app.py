@@ -1,14 +1,70 @@
 import azure.functions as func
 import os
-import time
 import json
-import pandas as pd
-from azure.storage.blob import BlobServiceClient
-import io
+import bcrypt
+from azure.cosmos import CosmosClient, PartitionKey
+from azure.blob.storage import BlobServiceClient
 
-# CRITICAL: This 'app' object is what Flex Consumption looks for to find your functions
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
+# Cosmos DB Setup
+COSMOS_CON_STR = os.environ.get("COSMOS_CONNECTION_STRING")
+client = CosmosClient.from_connection_string(COSMOS_CON_STR)
+database = client.get_database_client("UserDB")
+container = database.get_container_client("Users")
+
+# --- REGISTRATION ENDPOINT ---
+@app.route(route="register", methods=["POST"])
+def register_user(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        req_body = req.get_json()
+        email = req_body.get('email')
+        password = req_body.get('password')
+        name = req_body.get('name')
+
+        if not email or not password:
+            return func.HttpResponse("Missing email or password", status_code=400)
+
+        # Hash the password (Data Security Rubric)
+        hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+        user_item = {
+            "id": email,  # Using email as unique ID
+            "email": email,
+            "name": name,
+            "password": hashed_password, # Store hash, never plain text
+            "auth_type": "local"
+        }
+
+        container.create_item(body=user_item)
+        return func.HttpResponse(json.dumps({"message": "User registered successfully"}), status_code=201)
+    except Exception as e:
+        return func.HttpResponse(json.dumps({"error": str(e)}), status_code=500)
+
+# --- LOGIN ENDPOINT ---
+@app.route(route="login", methods=["POST"])
+def login_user(req: func.HttpRequest) -> func.HttpResponse:
+    try:
+        req_body = req.get_json()
+        email = req_body.get('email')
+        password = req_body.get('password')
+
+        # Find user in Cosmos DB
+        user = container.read_item(item=email, partition_key=email)
+        
+        # Verify Password
+        if bcrypt.checkpw(password.encode('utf-8'), user['password'].encode('utf-8')):
+            # In a real app, you'd return a JWT token here
+            return func.HttpResponse(json.dumps({
+                "message": "Login successful",
+                "user": {"name": user['name'], "email": user['email']}
+            }), status_code=200)
+        else:
+            return func.HttpResponse("Invalid credentials", status_code=401)
+            
+    except Exception:
+        return func.HttpResponse("User not found or login failed", status_code=401)
+    
 @app.route(route="data_analysis") # This replaces function.json
 def diet_analysis_handler(req: func.HttpRequest) -> func.HttpResponse:
     start_time = time.time()
