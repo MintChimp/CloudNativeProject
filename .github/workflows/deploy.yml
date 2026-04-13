@@ -20,18 +20,17 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
-    # Added this step to ensure all Phase 3 libraries are ready
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
     - name: Zip artifact for deployment
-      # This zips the contents of the current directory into release.zip
       run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
 
     - name: Upload artifact for deployment job
-      uses: azure/upload-artifact@v4
+      # FIXED: Changed azure/upload-artifact to actions/upload-artifact
+      uses: actions/upload-artifact@v4
       with:
         name: python-app
         path: release.zip
@@ -41,7 +40,8 @@ jobs:
     needs: build
     steps:
     - name: Download artifact from build job
-      uses: azure/download-artifact@v4
+      # FIXED: Changed azure/download-artifact to actions/download-artifact
+      uses: actions/download-artifact@v4
       with:
         name: python-app
 
