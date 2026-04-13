@@ -24,3 +24,5 @@ simulated_nosql/
 
 # --- Docker Specifics ---
 .dockerignore
+
+local.settings.json
