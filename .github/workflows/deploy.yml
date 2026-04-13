@@ -26,8 +26,13 @@ jobs:
         pip install -r requirements.txt
 
     - name: Zip artifact for deployment
-      run: zip -r release.zip ./* -x ".git*" ".github*" ".venv*"
-
+      run: |
+        # This ensures we zip from INSIDE the directory, 
+        # so function_app.py is at the root of the zip.
+        cd . 
+        zip -r ../release.zip . -x "*.git*" "*.github*" "*.venv*"
+        mv ../release.zip .
+        
     - name: Upload artifact for deployment job
       # FIXED: Changed azure/upload-artifact to actions/upload-artifact
       uses: actions/upload-artifact@v4
