@@ -596,6 +596,46 @@ function App() {
           )
         ),
 
+              // ── PAGINATION ──
+      React.createElement(
+        "section",
+        { className: "mt-8" },
+        React.createElement("h2", { className: "text-2xl font-semibold mb-4" }, "Pagination"),
+        React.createElement(
+          "div",
+          { className: "flex justify-center gap-2 mt-4" },
+          React.createElement(
+            "button",
+            {
+              className: "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50",
+              disabled: recipePage <= 1,
+              onClick: () => goToPage(recipePage - 1),
+            },
+            "Previous"
+          ),
+          ...pageNumbers.map((p) =>
+            React.createElement(
+              "button",
+              {
+                key: p,
+                className: p === recipePage ? "px-3 py-1 bg-blue-600 text-white rounded" : "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400",
+                onClick: () => goToPage(p),
+              },
+              p
+            )
+          ),
+          React.createElement(
+            "button",
+            {
+              className: "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50",
+              disabled: recipePage >= recipeTotalPages,
+              onClick: () => goToPage(recipePage + 1),
+            },
+            "Next"
+          )
+        )
+      ),
+
       // ── SECURITY & COMPLIANCE ──
       React.createElement(
         "section",
@@ -626,11 +666,11 @@ function App() {
         )
       ),
 
-      // ── OAUTH & 2FA ──
+      // ── OAUTH ──
       React.createElement(
         "section",
         { className: "mt-8" },
-        React.createElement("h2", { className: "text-2xl font-semibold mb-4" }, "OAuth & 2FA Integration"),
+        React.createElement("h2", { className: "text-2xl font-semibold mb-4" }, "OAuth"),
         React.createElement(
           "div",
           { className: "bg-white p-4 shadow-lg rounded-lg" },
@@ -675,46 +715,6 @@ function App() {
             "button",
             { className: "bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 mt-2" },
             "Clean Up Resources"
-          )
-        )
-      ),
-
-      // ── PAGINATION ──
-      React.createElement(
-        "section",
-        { className: "mt-8" },
-        React.createElement("h2", { className: "text-2xl font-semibold mb-4" }, "Pagination"),
-        React.createElement(
-          "div",
-          { className: "flex justify-center gap-2 mt-4" },
-          React.createElement(
-            "button",
-            {
-              className: "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50",
-              disabled: recipePage <= 1,
-              onClick: () => goToPage(recipePage - 1),
-            },
-            "Previous"
-          ),
-          ...pageNumbers.map((p) =>
-            React.createElement(
-              "button",
-              {
-                key: p,
-                className: p === recipePage ? "px-3 py-1 bg-blue-600 text-white rounded" : "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400",
-                onClick: () => goToPage(p),
-              },
-              p
-            )
-          ),
-          React.createElement(
-            "button",
-            {
-              className: "px-3 py-1 bg-gray-300 rounded hover:bg-gray-400 disabled:opacity-50",
-              disabled: recipePage >= recipeTotalPages,
-              onClick: () => goToPage(recipePage + 1),
-            },
-            "Next"
           )
         )
       )
